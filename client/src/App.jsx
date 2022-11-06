@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import SwapTokenWalletContract from "./contracts/SwapTokenWallet.json";
+import SwapTokenWalletContract from "./contracts/SwapTokensWallet.json";
 import getWeb3 from "./getWeb3";
 
 import "./App.css";
@@ -24,9 +24,8 @@ class App extends Component {
           SwapTokenWalletContract.networks[this.networkId].address
       );
 
-      // Set web3, accounts, and contract to the state, and then proceed with an
-      // example of interacting with the contract's methods.
-      // this.listenToPaymentEvent();
+      console.log("contract instance created");
+
       this.setState({ loaded: true });
     } catch (error) {
       // Catch any errors for any of the above operations.
@@ -35,17 +34,6 @@ class App extends Component {
       );
       console.error(error);
     }
-  };
-
-  listenToPaymentEvent = () => {
-    this.ItemManager.events.SupplyChainStep().on("data", async function (evt) {
-      console.log(evt);
-      let itemObj = this.ItemManager.methods
-        .items(evt.returnValues._itemIndex)
-        .call();
-      console.log(itemObj);
-      alert("Item " + itemObj._identifier + " was paid, Deliver it now.");
-    });
   };
 
   handleInputChange = (event) => {
@@ -59,9 +47,10 @@ class App extends Component {
 
   handleSubmit = async () => {
     const { tokenAddr, tokenAmt } = this.state;
-    let result = await this.SwapTokenWalletContract.methods
+
+    let result = await this.SwapTokenWallet.methods
       .ExchangeTokensForEther(tokenAddr, tokenAmt)
-      .send({ from: this.contract[0] });
+      .send({ from: this.accounts[0] });
 
     console.log(result);
     alert(
@@ -74,10 +63,9 @@ class App extends Component {
   };
 
   handleWithdrawSubmit = async () => {
-    let resultETH =
-      await this.SwapTokenWalletContract.methods.withdrawMyETH.send({
-        from: this.contract[0],
-      });
+    let resultETH = await this.SwapTokenWallet.methods.withdrawMyETH().send({
+      from: this.accounts[0],
+    });
 
     console.log(resultETH);
     alert(
@@ -93,19 +81,21 @@ class App extends Component {
     return (
       <div className="App">
         <h1>Swap your Tokens</h1>
-        <label for="tokenAddr">Token Address:</label>
+        <label htmlFor="tokenAddr">Token Address:</label>
         <input
           type="text"
           id="tokenAddr"
+          name="tokenAddr"
           value={this.state.tokenAddr}
-          onchange={this.handleInputChange}
+          onChange={this.handleInputChange}
         />
-        <label for="tokenAmt">Token Amount:</label>
+        <label htmlFor="tokenAmt">Token Amount:</label>
         <input
           type="text"
           id="tokenAmt"
+          name="tokenAmt"
           value={this.state.tokenAmt}
-          onchange={this.handleInputChange}
+          onChange={this.handleInputChange}
         />
         <p>
           <button type="button" onClick={this.handleSubmit}>
